@@ -1,0 +1,10 @@
+.firmware h1 {
+    text-align: center;
+}
+.firmware .panel-heading h3 {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+.btn-hex-upload {
+    margin-top: 15px;
+}
