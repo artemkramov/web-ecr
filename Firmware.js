@@ -7,16 +7,16 @@ var Firmware = (function () {
 	var formHexUpload = "#form-hex-upload";
 
 	/**
+	 * Form for burning of the HEX file
+	 * @type {string}
+	 */
+	var formHexBurn = "#form-firmware-upload";
+
+	/**
 	 * ID of the file
 	 * @type {string}
 	 */
 	var fileHexUploadID = "file-hex";
-
-	/**
-	 * Array of promises for syncing of the data
-	 * @type {Array}
-	 */
-	var promises = [];
 
 	/**
 	 * Content of the read file
@@ -25,51 +25,51 @@ var Firmware = (function () {
 	var fileContent = "";
 
 	/**
-	 * Dictionary array
-	 * @type {Array}
-	 */
-	var dictionary = [];
-
-	/**
-	 * Current language of the system
-	 * @type {string}
-	 */
-	var currentLanguage = 'cs';
-
-	/**
-	 * Class of each template for underscore handling
-	 * @type {string}
-	 */
-	var translatedBlock = '.language-template';
-
-	/**
 	 * Compressed byte array
 	 * @type {Object}
 	 */
 	var currentBinaryData = {};
 
+	/**
+	 * Current status from HEX file
+	 * @type {{}}
+	 */
+	var currentHexStatus = {};
+
+	/**
+	 * Templates for the status in the HEX file
+	 * @type {{VERS: string, GUID: string, DESCR: string}}
+	 */
+	var templates      = {
+		"VERS":  "version",
+		"GUID":  "guid",
+		"DESCR": "description"
+	};
+
 	return {
 		/**
 		 * Init events
 		 */
-		init:             function () {
+		init:                    function () {
 			this.event();
 		},
 		/**
 		 * Register events
 		 */
-		event:            function () {
+		event:                   function () {
 
 			var self = this;
 
 			$(document).ready(function () {
 
-				self.initDictionary();
+				App.initDictionary();
 
-				$(document).on("change", "#file-hex", function() {
-					fileContent  = "";
+				$(document).on("change", "#file-hex", function () {
+					var promises      = [];
+					fileContent       = "";
 					currentBinaryData = {};
-					var deferred = $.Deferred();
+					currentHexStatus  = {};
+					var deferred      = $.Deferred();
 					promises.push(deferred);
 					self.readFileData(deferred);
 					$.when.apply($, promises).then(function () {
@@ -78,23 +78,35 @@ var Firmware = (function () {
 				});
 
 				$(document).on("submit", formHexUpload, function () {
-					if (!_.isEmpty(currentBinaryData)) {
-						var blob = new Blob(currentBinaryData.data, {
-							type: "application/octet-stream"
-						});
-						var formData = new FormData();
-						formData.append('file', blob);
-						$.ajax({
-							url: 'test.php',
-							data: currentBinaryData.data,
-							type: 'post',
-							processData: false,
-							contentType: 'application/octet-stream',
-							success: function() {
-								self.updateCurrentStatus(self.getCurrentStatus());
-							}
-						});
-					}
+					$("body").addClass("loading");
+					_.defer(function() {
+						var isValid = self.parseHexFile(fileContent);
+						if (!isValid) {
+							$("body").removeClass("loading");
+							return false;
+						}
+						var ajaxUploadHex      = Api.uploadHexFile(currentBinaryData.data);
+						var ajaxUpdateFirmware = Api.uploadFirmwareInfo(currentHexStatus);
+						self.updateCurrentStatus();
+						if (_.isObject(ajaxUploadHex) && _.isObject(ajaxUpdateFirmware)) {
+							$.when(ajaxUpdateFirmware, ajaxUploadHex).then(function (responseFirmware, responseHex) {
+								var result = Api.checkResponseArray([responseFirmware, responseHex]);
+								App.pushResponse(result, App.getTranslation("uploadHexFileSuccess", "panel"));
+								$("body").removeClass("loading");
+							});
+						}
+					});
+
+					return false;
+				});
+
+				$(document).on("submit", formHexBurn, function () {
+					$("body").addClass("loading");
+					Api.burnProcessor(function(response) {
+						var result   = Api.checkResponseArray([response]);
+						App.pushResponse(result, App.getTranslation("burnDeviceSuccess", "panel"));
+						$("body").removeClass("loading");
+					});
 					return false;
 				});
 
@@ -104,7 +116,7 @@ var Firmware = (function () {
 		 * Read data from the file input to string
 		 * @param deferred
 		 */
-		readFileData:     function (deferred) {
+		readFileData:            function (deferred) {
 			var input = document.getElementById(fileHexUploadID);
 			var file  = input.files[0];
 			var fr    = new FileReader();
@@ -112,48 +124,33 @@ var Firmware = (function () {
 				fileContent = event.target.result;
 				deferred.resolve();
 			};
-			fr.readAsText(file);
-		},
-		/**
-		 * Init all translations and views
-		 */
-		initDictionary:   function () {
-			var self = this;
-			$.getJSON("desc.json")
-				.done(function (response) {
-					if (_.has(response, currentLanguage)) {
-						dictionary = response[currentLanguage];
-						self.initTranslations();
-					}
-					else {
-						console.log("Can't init language");
-					}
-				});
+			if (file) {
+				fr.readAsText(file);
+			}
+			else {
+				var status = this.getEmptyHexStatus();
+				this.updateUploadStatus(status);
+			}
 		},
 		/**
 		 * Parse HEX files
 		 * @param fileData
 		 */
-		parseHexFile: function (fileData) {
-			var response = {};
-			var templates = {
-				"VERS": "version",
-				"GUID": "guid",
-				"DESCR": "description"
-			};
+		parseHexFile:            function (fileData) {
+
 			var isHeaderParsed = false;
-			var status = {};
+			var status         = {};
 			/**
 			 * Split data by the end symbol
 			 * @type {Array}
 			 */
-			var lines = fileData.split("\r\n");
+			var lines          = fileData.split("\r\n");
 			if (lines.length > 6) {
 				/**
 				 * Go through lines and check if the line is the status line
 				 */
 				for (var i = 0; i < lines.length; i++) {
-					if (Object.keys(status).length == Object.keys(templates).length){
+					if (Object.keys(status).length == Object.keys(templates).length) {
 						isHeaderParsed = true;
 						break;
 					}
@@ -168,7 +165,7 @@ var Firmware = (function () {
 						 */
 						for (var property in templates) {
 							if (line.indexOf(property) == 0) {
-								line = line.replace(property, "").trim();
+								line                        = line.replace(property, "").trim();
 								status[templates[property]] = line;
 							}
 
@@ -176,10 +173,9 @@ var Firmware = (function () {
 					}
 				}
 			}
+			var isFileVaild = false;
 			if (!isHeaderParsed) {
-				for (var property in templates) {
-					status[templates[property]] = '-';
-				}
+				status = this.getEmptyHexStatus();
 			}
 			else {
 				/**
@@ -188,55 +184,50 @@ var Firmware = (function () {
 				lines.splice(0, 3);
 				lines = _.compact(lines);
 				lines.splice(lines.length - 2, 1);
-				currentBinaryData = IntelHex.parseIntelHex(lines.join("\r\n"));
+				try {
+					currentBinaryData = IntelHex.parseIntelHex(lines.join("\r\n"));
+					currentHexStatus  = status;
+					isFileVaild       = true;
+					App.clearMessage();
+				}
+				catch (e) {
+				}
+			}
+			if (!isFileVaild) {
+				App.pushMessage(App.getTranslation("errorNotValidFile"), "danger");
 			}
 			this.updateUploadStatus(status);
+			return isFileVaild;
 		},
 		/**
-		 * Get translation from the dictionary
-		 * @param key
-		 * @param group
-		 * @returns {*}
+		 * Returns empty state object
+		 * @returns {{}}
 		 */
-		getTranslation:   function (key, group) {
-			if (typeof group == 'undefined') {
-				group = 'panel';
+		getEmptyHexStatus: function() {
+			var status = {};
+			for (var property in templates) {
+				status[templates[property]] = '-';
 			}
-			return dictionary[group][key];
+			return status;
 		},
 		/**
-		 * Init all views due to the current language
+		 * Get the current firmware state of the device
+		 * @returns {*|{}}
 		 */
-		initTranslations: function () {
-			var self = this;
-			$(translatedBlock).each(function () {
-				var compiled = _.template($(this).html());
-				var callback = self.camelize($(this).data('type'));
-				var template = "";
-				if (typeof self[callback] != 'undefined') {
-					template = self[callback](compiled);
-				}
-				else {
-					template = compiled({
-						dictionary: dictionary.panel
-					});
-				}
-				var block    = $("." + $(this).data('type')).html(template);
-			});
+		getCurrentStatus:        function () {
+			return Api.getInfo();
 		},
-		getCurrentStatus: function () {
-			return {
-				version: '2.2.3',
-				description: 'Test description' + Date.now(),
-				guid: 'GUID type',
-			};
-		},
-		updateCurrentStatus: function(state) {
+		/**
+		 * Update the current status
+		 * @param state
+		 */
+		updateCurrentStatus:     function () {
+			var state = this.getCurrentStatus();
 			var blockTag = "firmware-current-state";
 			var template = _.template($("[data-type=" + blockTag + "]").html());
-			var block = "." + blockTag;
+			var block    = "." + blockTag;
 			$(block).html(template({
-				dictionary: dictionary.panel,
+				dictionary:  App.getDictionaryPanel(),
 				currentState: state
 			}));
 		},
@@ -244,43 +235,29 @@ var Firmware = (function () {
 		 * Update status parsed from the hex file
 		 * @param state
 		 */
-		updateUploadStatus: function (state) {
+		updateUploadStatus:      function (state) {
 			if (typeof state == 'undefined') {
 				state = {};
 			}
 			var blockTag = "firmware-upload-hex-status";
 			var template = _.template($("[data-type=" + blockTag + "]").html());
-			var block = "." + blockTag;
+			var block    = "." + blockTag;
 			$(block).html(template({
-				dictionary: dictionary.panel,
+				dictionary:    App.getDictionaryPanel(),
 				uploadedState: state
 			}));
 			$(block).slideDown();
 
 		},
 		/**
-		 * Camelize the string
-		 * @param input
-		 * @returns {string}
-		 */
-		camelize:         function (input) {
-			return input.toLowerCase().replace(/-(.)/g, function(match, group1) {
-				return group1.toUpperCase();
-			});
-		},
-		/**
 		 * Callback for the rendering of the current state view
 		 * @param compiled
 		 * @returns {*}
 		 */
-		firmwareCurrentState: function(compiled) {
-			var currentState = {
-				version: '2.2.3',
-				description: 'Test description',
-				guid: 'GUID type',
-			};
+		firmwareCurrentState:    function (compiled) {
+			var currentState = this.getCurrentStatus();
 			return compiled({
-				dictionary: dictionary.panel,
+				dictionary:   App.getDictionaryPanel(),
 				currentState: currentState,
 			});
 		},
@@ -290,10 +267,10 @@ var Firmware = (function () {
 		 * @param compiled
 		 * @returns {*}
 		 */
-		firmwareUploadHexStatus: function(compiled) {
+		firmwareUploadHexStatus: function (compiled) {
 			return compiled({
-				dictionary: dictionary.panel,
-				uploadedState: {},
+				dictionary:    App.getDictionaryPanel(),
+				uploadedState: this.getEmptyHexStatus(),
 			});
 		}
 	};

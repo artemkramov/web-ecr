@@ -564,7 +564,11 @@
       "uploadHexFile": "Upload hex file",
       "upload": "Upload",
       "uploadedStatus": "Upload file status",
-      "uploadFirmware": "Upload firmware to processor"
+      "uploadFirmware": "Burn firmware to processor",
+      "burn": "Burn",
+      "uploadHexFileSuccess": "HEX file was uploaded successfully!",
+      "burnDeviceSuccess": "Device was burned successfully!",
+      "errorNotValidFile": "HEX file is not valid!"
     },
     "err": {
       "x01": "Cena není zadána",
