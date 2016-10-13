@@ -63,21 +63,21 @@
 
 <!-- TITLE -->
 <script type="text/template" class="language-template" data-type="firmware-title">
-    <h1><%= dictionary.firmware %></h1>
+    <h1><%= App.getTranslation("Firmware") %></h1>
 </script>
 
 <!-- CURRENT STATE -->
 <script type="text/template" class="language-template" data-type="firmware-current-state">
     <div class="panel panel-default">
         <div class="panel-heading">
-            <h3><%= dictionary.currentState %></h3>
+            <h3><%= App.getTranslation("Current state") %></h3>
         </div>
         <div class="panel-body">
             <table class="table table-striped">
                 <tbody>
                 <tr>
                     <td>
-                        <label><%= dictionary.version %>:</label>
+                        <label><%= App.getTranslation("Version") %>:</label>
                     </td>
                     <td>
                         <%= currentState.version %>
@@ -85,7 +85,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <label><%= dictionary.description %>:</label>
+                        <label><%= App.getTranslation("Description") %>:</label>
                     </td>
                     <td>
                         <%= currentState.description %>
@@ -93,7 +93,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <label><%= dictionary.guid %>:</label>
+                        <label><%= App.getTranslation("GUID") %>:</label>
                     </td>
                     <td>
                         <%= currentState.guid %>
@@ -109,14 +109,14 @@
 <script type="text/template" class="language-template" data-type="firmware-upload-hex-file">
     <div class="panel panel-default">
         <div class="panel-heading">
-            <h3><%= dictionary.uploadHexFile %></h3>
+            <h3><%= App.getTranslation("Upload hex file") %></h3>
         </div>
         <div class="panel-body">
             <div class="firmware-upload">
                 <form method="post" action="" enctype="multipart/form-data" id="form-hex-upload">
                     <input type="file" required="true" name="fileHex" accept=".hex" id="file-hex">
                     <button type="submit" class="btn btn-primary btn-hex-upload">
-                        <span class='glyphicon glyphicon-download-alt'></span> <%= dictionary.upload %>
+                        <span class='glyphicon glyphicon-download-alt'></span> <%= App.getTranslation("Upload") %>
                     </button>
                 </form>
             </div>
@@ -128,13 +128,13 @@
 <!-- STATUS OF THE UPLOADED HEX FILE -->
 <script type="text/template" class="language-template" data-type="firmware-upload-hex-status">
 
-    <h4><%= dictionary.uploadedStatus %></h4>
+    <h4><%= App.getTranslation("Upload file status") %></h4>
 
     <table class="table table-striped">
         <tbody>
         <tr>
             <td>
-                <label><%= dictionary.version %>:</label>
+                <label><%= App.getTranslation("Version") %>:</label>
             </td>
             <td>
                 <%= uploadedState.version %>
@@ -142,7 +142,7 @@
         </tr>
         <tr>
             <td>
-                <label><%= dictionary.description %>:</label>
+                <label><%= App.getTranslation("Description") %>:</label>
             </td>
             <td>
                 <%= uploadedState.description %>
@@ -150,7 +150,7 @@
         </tr>
         <tr>
             <td>
-                <label><%= dictionary.guid %>:</label>
+                <label><%= App.getTranslation("GUID") %>:</label>
             </td>
             <td>
                 <%= uploadedState.guid %>
@@ -164,13 +164,13 @@
 <script type="text/template" class="language-template" data-type="firmware-upload-to-processor">
     <div class="panel panel-default">
         <div class="panel-heading">
-            <h3><%= dictionary.uploadFirmware %></h3>
+            <h3><%= App.getTranslation("Burn firmware to processor") %></h3>
         </div>
         <div class="panel-body">
             <div class="firmware-upload">
                 <form method="post" action="" enctype="multipart/form-data" id="form-firmware-upload">
                     <button type="submit" class="btn btn-danger">
-                        <span class="glyphicon glyphicon-flash"></span> <%= dictionary.burn %>
+                        <span class="glyphicon glyphicon-flash"></span> <%= App.getTranslation("Burn") %>
                     </button>
                 </form>
             </div>
@@ -190,6 +190,7 @@
 <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script type="text/javascript"
         src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script type="text/javascript" src="jquery.noty.packaged.min.js"></script>
 <script type="text/javascript" src="Buffer.js"></script>
 <script type="text/javascript" src="IntelHex.js"></script>
 <script type="text/javascript" src="App.js"></script>

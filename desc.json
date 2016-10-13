@@ -556,19 +556,19 @@
   },
   "cs": {
     "panel": {
-      "firmware": "Firmware",
-      "currentState": "Current state",
-      "version": "Version",
-      "description": "Description",
-      "guid": "GUID",
-      "uploadHexFile": "Upload hex file",
-      "upload": "Upload",
-      "uploadedStatus": "Upload file status",
-      "uploadFirmware": "Burn firmware to processor",
-      "burn": "Burn",
-      "uploadHexFileSuccess": "HEX file was uploaded successfully!",
-      "burnDeviceSuccess": "Device was burned successfully!",
-      "errorNotValidFile": "HEX file is not valid!"
+      "Firmware": "Firmware",
+      "Current state": "Current state",
+      "Version": "Version",
+      "Description": "Description",
+      "GUID": "GUID",
+      "Upload hex file": "Upload hex file",
+      "Upload": "Upload",
+      "Upload file status": "Upload file status",
+      "Burn firmware to processor": "Burn firmware to processor",
+      "Burn": "Burn",
+      "HEX file was uploaded successfully!": "HEX file was uploaded successfully!",
+      "Device was burned successfully!": "Device was burned successfully!",
+      "HEX file is not valid!": "HEX file is not valid!"
     },
     "err": {
       "x01": "Cena není zadána",

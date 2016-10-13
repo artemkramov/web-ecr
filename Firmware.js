@@ -91,7 +91,7 @@ var Firmware = (function () {
 						if (_.isObject(ajaxUploadHex) && _.isObject(ajaxUpdateFirmware)) {
 							$.when(ajaxUpdateFirmware, ajaxUploadHex).then(function (responseFirmware, responseHex) {
 								var result = Api.checkResponseArray([responseFirmware, responseHex]);
-								App.pushResponse(result, App.getTranslation("uploadHexFileSuccess", "panel"));
+								App.pushResponse(result, App.getTranslation("HEX file was uploaded successfully!", "panel"));
 								$("body").removeClass("loading");
 							});
 						}
@@ -104,7 +104,7 @@ var Firmware = (function () {
 					$("body").addClass("loading");
 					Api.burnProcessor(function(response) {
 						var result   = Api.checkResponseArray([response]);
-						App.pushResponse(result, App.getTranslation("burnDeviceSuccess", "panel"));
+						App.pushResponse(result, App.getTranslation("Device was burned successfully!", "panel"));
 						$("body").removeClass("loading");
 					});
 					return false;
@@ -194,7 +194,7 @@ var Firmware = (function () {
 				}
 			}
 			if (!isFileVaild) {
-				App.pushMessage(App.getTranslation("errorNotValidFile"), "danger");
+				App.pushMessage(App.getTranslation("HEX file is not valid!"), "error");
 			}
 			this.updateUploadStatus(status);
 			return isFileVaild;
@@ -244,7 +244,8 @@ var Firmware = (function () {
 			var block    = "." + blockTag;
 			$(block).html(template({
 				dictionary:    App.getDictionaryPanel(),
-				uploadedState: state
+				uploadedState: state,
+				App: App,
 			}));
 			$(block).slideDown();
 
@@ -259,6 +260,7 @@ var Firmware = (function () {
 			return compiled({
 				dictionary:   App.getDictionaryPanel(),
 				currentState: currentState,
+				App: App,
 			});
 		},
 		/**
@@ -271,6 +273,7 @@ var Firmware = (function () {
 			return compiled({
 				dictionary:    App.getDictionaryPanel(),
 				uploadedState: this.getEmptyHexStatus(),
+				App: App,
 			});
 		}
 	};

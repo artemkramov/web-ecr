@@ -65,7 +65,11 @@ var App = (function () {
 			if (typeof group == 'undefined') {
 				group = 'panel';
 			}
-			return dictionary[group][key];
+			var message = dictionary[group][key];
+			if (message) {
+				return message;
+			}
+			return key;
 		},
 		/**
 		 * Get all translations from the panel group
@@ -90,22 +94,17 @@ var App = (function () {
 		 * @param type
 		 */
 		pushMessage:             function (message, type) {
-			var blockTag = "firmware-alert";
 			this.clearMessage();
-			var compiled = _.template($("[data-type=" + blockTag + "]").html());
-			$("." + blockTag).html(compiled({
-				alert: {
-					message: message,
-					type:    type
-				}
-			}));
+			var n = noty({
+				text: message,
+				type: type
+			});
 		},
 		/**
 		 * Clear alert message
 		 */
 		clearMessage:            function () {
-			var block = ".firmware-alert";
-			$(block).html("");
+			$.noty.closeAll();
 		},
 		/**
 		 * Push request result
@@ -116,7 +115,7 @@ var App = (function () {
 			var message = successMessage;
 			var type    = "success";
 			if (!response.success) {
-				type    = "danger";
+				type    = "error";
 				message = response.error;
 			}
 			this.pushMessage(message, type);
